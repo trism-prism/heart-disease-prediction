@@ -4,7 +4,9 @@ A binary classifier on the UCI Heart Disease (Cleveland) data, tuned for **recal
 patient costs far more than a false alarm. Logistic regression, random forest and XGBoost are compared on
 one split, the winner is served in a Streamlit form, and PostgreSQL records every training run.
 
-**Live demo: https://heart-disease-prediction-project-01.streamlit.app/**
+**Live Vercel app: https://heart-disease-prediction-alpha.vercel.app/**
+
+Original Streamlit demo: https://heart-disease-prediction-project-01.streamlit.app/
 
 > **Educational demo, not a diagnostic tool.** 303 patients, one clinic, 1980s data, 68% male.
 
@@ -75,3 +77,19 @@ Host port 5433 avoids clashes with another local Postgres on 5432. Change it in 
 ## Data and licence
 
 Data: [UCI Heart Disease](https://archive.ics.uci.edu/dataset/45/heart-disease), CC BY 4.0. Code: MIT.
+
+## Vercel web version
+
+The medical-style React and Flask app lives in vercel_app/. It serves the same frozen logistic-regression pipeline, threshold, sigmoid recalibration and feature explanations as the Streamlit version. It does not train or connect to PostgreSQL at runtime, and does not store submitted profiles. The original Streamlit app remains available.
+
+Deployment root: vercel_app. Python 3.12 and a minimal requirements.txt keep training/UI dependencies out of the function. React assets build into public/ and are served by Vercel's CDN. app.py exposes GET /api/model and POST /api/predict; input ranges and categorical codes are validated server-side, unknown ca/thal are imputed, and prediction responses are not cached.
+
+Local preview from repository root: install Flask from vercel_app/requirements.txt into the existing development environment; run npm ci && npm run build in vercel_app, then run python vercel_app/app.py. Visit http://127.0.0.1:5000. npm run dev in vercel_app also provides Vite development with an API proxy to port 5000.
+
+The two deployment model artifacts are copies of models/pipeline.joblib and models/metadata.json. After an intentionally evaluated model change, run node vercel_app/scripts/sync-models.mjs and commit the copied artifacts. CI checks byte-for-byte equality and prediction parity with the original inference implementation.
+
+The demo remains educational and is not a diagnostic tool. Use example profiles; the fitted score is calibrated only to the Cleveland population.
+
+Production Vercel project: heart-disease-prediction, connected to this GitHub repository with vercel_app as Root Directory. Pushes to main deploy automatically. Production domain: https://heart-disease-prediction-alpha.vercel.app/. 37 tests are collected; 34 non-database tests pass, with 3 database tests requiring local PostgreSQL.
+
+Vercel static asset snapshot: vercel_app/public is committed because the Python deployment collector enumerates static files before the React build hook. When changing the frontend, run npm run build in vercel_app and commit the refreshed public files with the UI source. CI rebuilds and rejects any difference from the committed assets. Node modules and local Vercel credentials stay ignored.

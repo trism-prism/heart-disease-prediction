@@ -5,3 +5,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+vercel_app/node_modules/
+vercel_app/.vercel/
+
+.vercel
+.env*

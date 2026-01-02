@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "flask",
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "app.py": {
+      "maxDuration": 30,
+      "excludeFiles": "{node_modules/**,ui/**,tests/**,scripts/**,package-lock.json}"
+    }
+  }
+}
