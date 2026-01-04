@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-const repo = 'https://github.com/trism-dev/heart-disease-prediction';
+const repo = 'https://github.com/trism-prism/heart-disease-prediction';
 const fields = [
   ['age', 'Age', 'years'],
   ['sex', 'Sex', '', [[1, 'Male'], [0, 'Female']]],
