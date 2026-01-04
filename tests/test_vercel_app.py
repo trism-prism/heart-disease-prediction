@@ -43,35 +43,33 @@ def test_api_matches_original_inference(client, profile):
     assert response.headers["Cache-Control"] == "no-store"
 
 
+def _invalid(**changes):
+    key = next(iter(changes))
+    return pytest.param({"json": {**PROFILES[0], **changes}}, 400, key, id=f"{key}-{changes[key]}")
+
+
 @pytest.mark.parametrize(
-    "changes",
+    "request_kwargs, status, error_key",
     [
-        {"age": 28},
-        {"sex": 3},
-        {"thal": 0},
-        {"oldpeak": -1},
-        {"chol": None},
-        {"sex": True},
-        {"age": np.nan},
-        {"ca": 2.5},
+        _invalid(age=28),
+        _invalid(sex=3),
+        _invalid(thal=0),
+        _invalid(oldpeak=-1),
+        _invalid(chol=None),
+        _invalid(sex=True),
+        _invalid(age=np.nan),
+        _invalid(ca=2.5),
+        pytest.param({"json": {}}, 400, None, id="empty-json"),
+        pytest.param({"json": {**PROFILES[0], "extra": 1}}, 400, None, id="extra-field"),
+        pytest.param({"data": "bad", "content_type": "application/json"}, 400, None, id="malformed-json"),
+        pytest.param({"data": "x" * 9000, "content_type": "application/json"}, 413, None, id="payload-413"),
     ],
 )
-def test_rejects_invalid_inputs(client, changes):
-    response = client.post("/api/predict", json={**PROFILES[0], **changes})
-    assert response.status_code == 400
-    assert next(iter(changes)) in response.get_json()["errors"]
-
-
-def test_rejects_missing_extra_and_malformed_inputs(client):
-    assert client.post("/api/predict", json={}).status_code == 400
-    assert client.post("/api/predict", json={**PROFILES[0], "extra": 1}).status_code == 400
-    assert (
-        client.post("/api/predict", data="bad", content_type="application/json").status_code == 400
-    )
-    assert (
-        client.post("/api/predict", data="x" * 9000, content_type="application/json").status_code
-        == 413
-    )
+def test_rejects_invalid_missing_extra_and_malformed_inputs(client, request_kwargs, status, error_key):
+    response = client.post("/api/predict", **request_kwargs)
+    assert response.status_code == status
+    if error_key:
+        assert error_key in response.get_json()["errors"]
 
 
 def test_metadata_has_ranges_defaults_and_no_private_runtime_configuration(client):
